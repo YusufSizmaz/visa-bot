@@ -14,7 +14,7 @@ RUN dotnet restore src/VisaTelegramBot.WebApi/VisaTelegramBot.WebApi.csproj
 COPY src/ src/
 RUN dotnet publish src/VisaTelegramBot.WebApi/VisaTelegramBot.WebApi.csproj -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Container healthcheck'i HTTP istegi atabilsin diye. aspnet imajinda ne curl ne wget bulunur;
