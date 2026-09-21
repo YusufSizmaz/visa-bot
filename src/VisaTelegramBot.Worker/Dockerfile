@@ -12,7 +12,7 @@ COPY src/ src/
 RUN dotnet publish src/VisaTelegramBot.Worker/VisaTelegramBot.Worker.csproj -c Release -o /app --no-restore
 
 # Worker HTTP sunmaz; ASP.NET yerine daha kucuk olan runtime imaji yeterli.
-FROM mcr.microsoft.com/dotnet/runtime:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
 WORKDIR /app
 USER $APP_UID
 
