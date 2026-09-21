@@ -1,25 +1,28 @@
-# Yerel gelistirme (sadece altyapi):   docker compose up -d sqlserver redis
+# Yerel gelistirme (sadece altyapi):   docker compose up -d postgres redis
 # Tum sistem (API + Worker dahil):     docker compose --profile app up -d --build
 # Worker'i yatay olcekleme:             docker compose --profile app up -d --scale worker=3
+#
+# Uretim icin bu dosya kullanilmaz: compose.production.yaml'a ve DEPLOY.md'ye bakin.
 
 name: visa-telegram-bot
 
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  postgres:
+    image: postgres:17-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD:-VisaBot_Dev_Passw0rd!}
+      POSTGRES_DB: VisaTelegramBot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-VisaBot_Dev_Passw0rd!}
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqlserver-data:/var/opt/mssql
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q \"SELECT 1\" || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d VisaTelegramBot"]
       interval: 10s
       timeout: 5s
-      retries: 20
-      start_period: 20s
+      retries: 10
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
@@ -38,14 +41,14 @@ services:
       dockerfile: src/VisaTelegramBot.WebApi/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__Database: "Server=sqlserver,1433;Database=VisaTelegramBot;User Id=sa;Password=${SQL_SA_PASSWORD:-VisaBot_Dev_Passw0rd!};TrustServerCertificate=True"
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=VisaTelegramBot;Username=postgres;Password=${POSTGRES_PASSWORD:-VisaBot_Dev_Passw0rd!}"
       ConnectionStrings__Redis: "redis:6379"
       Database__ApplyMigrationsOnStartup: "true"
       Security__ApiKey: ${API_KEY:-dev-api-key-change-me-please}
     ports:
       - "8080:8080"
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -58,13 +61,13 @@ services:
       dockerfile: src/VisaTelegramBot.Worker/Dockerfile
     environment:
       DOTNET_ENVIRONMENT: Production
-      ConnectionStrings__Database: "Server=sqlserver,1433;Database=VisaTelegramBot;User Id=sa;Password=${SQL_SA_PASSWORD:-VisaBot_Dev_Passw0rd!};TrustServerCertificate=True"
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=VisaTelegramBot;Username=postgres;Password=${POSTGRES_PASSWORD:-VisaBot_Dev_Passw0rd!}"
       ConnectionStrings__Redis: "redis:6379"
       # Bos birakilirsa Worker acilista anlasilir bir dogrulama hatasiyla durur (ValidateOnStart).
       Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:-}
       Telegram__ChannelId: ${TELEGRAM_CHANNEL_ID:-}
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
       # Migration'lari API uygular; Worker tablolar olusmadan baslamasin.
       api:
@@ -83,4 +86,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  sqlserver-data:
+  postgres-data:

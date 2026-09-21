@@ -10,8 +10,6 @@ using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using VisaTelegramBot.Application.Abstractions.Caching;
 using VisaTelegramBot.Application.ChannelMessages;
-using VisaTelegramBot.Application.FlightDeals;
-using VisaTelegramBot.Infrastructure.FlightPrices;
 using VisaTelegramBot.Application.Abstractions.Locking;
 using VisaTelegramBot.Application.Abstractions.Persistence;
 using VisaTelegramBot.Application.Abstractions.Publishing;
@@ -56,13 +54,11 @@ public static class DependencyInjection
         AddCaching(services, configuration);
         AddScraping(services, configuration);
 
-        services.AddSingleton<IDistributedLockProvider>(new SqlServerDistributedLockProvider(connectionString));
+        services.AddSingleton<IDistributedLockProvider>(new PostgresDistributedLockProvider(connectionString));
 
         // Yayinci kaydi yoksa Null Object kullanilir. AddTelegramPublishing bunu degistirir.
         services.TryAddTransient<INewsPublisher, NullNewsPublisher>();
         services.TryAddTransient<IChannelInfoProvider, NullChannelInfoProvider>();
-
-        AddFlightPrices(services, configuration);
 
         services.AddHealthChecks()
             .AddDbContextCheck<AppDbContext>("database", tags: ["ready"]);
@@ -102,9 +98,9 @@ public static class DependencyInjection
     private static void AddPersistence(IServiceCollection services, string connectionString)
     {
         // DbContext pooling: her istekte yeni DbContext kurmak yerine havuzdan hazir nesne alinir.
-        services.AddDbContextPool<AppDbContext>(options => options.UseSqlServer(
+        services.AddDbContextPool<AppDbContext>(options => options.UseNpgsql(
             connectionString,
-            sqlServer => sqlServer.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null)));
+            npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorCodesToAdd: null)));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<INewsSourceRepository, NewsSourceRepository>();
@@ -113,30 +109,6 @@ public static class DependencyInjection
         services.AddScoped<INewsItemQueries, NewsItemQueries>();
         services.AddScoped<IChannelMessageRepository, ChannelMessageRepository>();
         services.AddScoped<IChannelMessageQueries, ChannelMessageQueries>();
-        services.AddScoped<IFlightRouteRepository, FlightRouteRepository>();
-        services.AddScoped<IFlightDealRepository, FlightDealRepository>();
-        services.AddScoped<IFlightDealQueries, FlightDealQueries>();
-    }
-
-    private static void AddFlightPrices(IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<FlightDealOptions>()
-            .Bind(configuration.GetSection(FlightDealOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddOptions<TravelpayoutsOptions>()
-            .Bind(configuration.GetSection(TravelpayoutsOptions.SectionName));
-
-        // Typed client: HttpClient, IHttpClientFactory tarafindan yonetilir ve saglayici sinifina enjekte edilir.
-        // Okuma istegi idempotent oldugu icin burada standart retry + circuit breaker guvenle kullanilabilir.
-        services.AddHttpClient<IFlightPriceProvider, TravelpayoutsFlightPriceProvider>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.travelpayouts.com");
-                client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json");
-                client.Timeout = Timeout.InfiniteTimeSpan;
-            })
-            .AddStandardResilienceHandler();
     }
 
     private static void AddCaching(IServiceCollection services, IConfiguration configuration)

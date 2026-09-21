@@ -11,13 +11,12 @@ internal sealed class ChannelMessageConfiguration : IEntityTypeConfiguration<Cha
     {
         builder.ToTable("ChannelMessages");
 
-        builder.HasKey(message => message.Id).IsClustered(false);
+        builder.HasKey(message => message.Id);
         builder.Property(message => message.Id).ValueGeneratedNever();
 
         builder.HasIndex(message => new { message.CreatedAtUtc, message.Id })
             .IsUnique()
-            .IsClustered()
-            .HasDatabaseName("CIX_ChannelMessages_CreatedAtUtc_Id");
+            .HasDatabaseName("IX_ChannelMessages_CreatedAtUtc_Id");
 
         builder.Property(message => message.Kind).HasConversion<int>();
         builder.Property(message => message.Status).HasConversion<int>();
@@ -44,14 +43,14 @@ internal sealed class ChannelMessageConfiguration : IEntityTypeConfiguration<Cha
         builder.OwnsOne(message => message.Photo, photo =>
         {
             photo.Property(value => value.Content).HasColumnName("PhotoContent").IsRequired();
-            photo.Property(value => value.ContentType).HasColumnName("PhotoContentType").HasMaxLength(50).IsUnicode(false).IsRequired();
+            photo.Property(value => value.ContentType).HasColumnName("PhotoContentType").HasMaxLength(50).IsRequired();
             photo.Property(value => value.FileName).HasColumnName("PhotoFileName").HasMaxLength(MessagePhoto.FileNameMaxLength).IsRequired();
         });
 
-        builder.Property<byte[]>("RowVersion").IsRowVersion();
+        builder.Property<uint>("xmin").HasColumnName("xmin").IsRowVersion();
 
         builder.HasIndex(message => message.ScheduledAtUtc)
-            .HasFilter($"[{nameof(ChannelMessage.Status)}] = {(int)ChannelMessageStatus.Scheduled}")
+            .HasFilter($"\"{nameof(ChannelMessage.Status)}\" = {(int)ChannelMessageStatus.Scheduled}")
             .IncludeProperties(message => new { message.LockedUntilUtc })
             .HasDatabaseName("IX_ChannelMessages_Scheduled");
 

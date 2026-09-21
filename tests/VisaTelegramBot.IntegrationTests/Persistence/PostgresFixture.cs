@@ -1,40 +1,42 @@
 using MediatR;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Npgsql;
 using NSubstitute;
-using Testcontainers.MsSql;
+using Testcontainers.PostgreSql;
 using VisaTelegramBot.Infrastructure.Persistence;
 
 namespace VisaTelegramBot.IntegrationTests.Persistence;
 
 /// <summary>
-/// Testler icin gercek bir SQL Server saglar. In-memory veritabani yerine gercek motor kullaniriz;
-/// kilitler, unique index ve SQL cevirileri ancak boyle dogrulanir.
+/// Testler icin gercek bir PostgreSQL saglar. In-memory veritabani yerine gercek motor kullaniriz;
+/// advisory lock'lar, unique index ve SQL cevirileri ancak boyle dogrulanir.
 ///
 /// Oncelik sirasi:
-/// 1. VISABOT_TEST_SQLSERVER ortam degiskeni tanimliysa o sunucu kullanilir (ornek: LocalDB).
-/// 2. Docker calisiyorsa Testcontainers ile gecici bir SQL Server container'i baslatilir.
+/// 1. VISABOT_TEST_POSTGRES ortam degiskeni tanimliysa o sunucu kullanilir.
+/// 2. Docker calisiyorsa Testcontainers ile gecici bir PostgreSQL container'i baslatilir.
 /// 3. Ikisi de yoksa testler "atlandi" olarak raporlanir.
 /// </summary>
-public sealed class SqlServerFixture : IAsyncLifetime
+public sealed class PostgresFixture : IAsyncLifetime
 {
-    private MsSqlContainer? _container;
+    private PostgreSqlContainer? _container;
 
     public string ConnectionString { get; private set; } = string.Empty;
 
     public async Task InitializeAsync()
     {
-        switch (SqlServerAvailability.Mode)
+        switch (PostgresAvailability.Mode)
         {
-            case SqlServerMode.External:
-                ConnectionString = WithTestDatabase(SqlServerAvailability.ExternalConnectionString!);
+            case PostgresMode.External:
+                ConnectionString = WithTestDatabase(PostgresAvailability.ExternalConnectionString!);
                 break;
 
-            case SqlServerMode.Docker:
-                _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
+            case PostgresMode.Docker:
+                _container = new PostgreSqlBuilder().WithImage("postgres:17-alpine").Build();
                 await _container.StartAsync();
-                ConnectionString = _container.GetConnectionString();
+                // Container'in varsayilan veritabanina degil, teste ozel bir veritabanina baglaniriz:
+                // aksi halde asagidaki EnsureDeleted bagli oldugu veritabanini dusurmeye calisir.
+                ConnectionString = WithTestDatabase(_container.GetConnectionString());
                 break;
 
             default:
@@ -48,7 +50,7 @@ public sealed class SqlServerFixture : IAsyncLifetime
 
     public AppDbContext CreateDbContext() => new(
         new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlServer(ConnectionString)
+            .UseNpgsql(ConnectionString)
             .Options);
 
     internal static UnitOfWork CreateUnitOfWork(AppDbContext dbContext) =>
@@ -59,10 +61,13 @@ public sealed class SqlServerFixture : IAsyncLifetime
         if (_container is not null)
         {
             await _container.DisposeAsync();
+            return;
         }
-        else if (SqlServerAvailability.Mode == SqlServerMode.External)
+
+        if (PostgresAvailability.Mode == PostgresMode.External)
         {
-            SqlConnection.ClearAllPools();
+            // Acik havuz baglantilari kalirsa DROP DATABASE reddedilir.
+            NpgsqlConnection.ClearAllPools();
             await using var dbContext = CreateDbContext();
             await dbContext.Database.EnsureDeletedAsync();
         }
@@ -71,9 +76,9 @@ public sealed class SqlServerFixture : IAsyncLifetime
     // Disaridan verilen sunucudaki gercek veritabanlarina dokunmamak icin testlere ozel bir veritabani adi kullanilir.
     private static string WithTestDatabase(string connectionString)
     {
-        var builder = new SqlConnectionStringBuilder(connectionString)
+        var builder = new NpgsqlConnectionStringBuilder(connectionString)
         {
-            InitialCatalog = $"VisaTelegramBot_Tests_{Guid.NewGuid():N}"
+            Database = $"visabot_tests_{Guid.NewGuid():N}"
         };
 
         return builder.ConnectionString;
@@ -81,45 +86,45 @@ public sealed class SqlServerFixture : IAsyncLifetime
 }
 
 [CollectionDefinition(Name)]
-public sealed class SqlServerCollection : ICollectionFixture<SqlServerFixture>
+public sealed class PostgresCollection : ICollectionFixture<PostgresFixture>
 {
-    public const string Name = "SqlServer";
+    public const string Name = "Postgres";
 }
 
-public sealed class SqlServerFactAttribute : FactAttribute
+public sealed class PostgresFactAttribute : FactAttribute
 {
-    public SqlServerFactAttribute()
+    public PostgresFactAttribute()
     {
-        if (SqlServerAvailability.Mode == SqlServerMode.Unavailable)
+        if (PostgresAvailability.Mode == PostgresMode.Unavailable)
         {
-            Skip = "SQL Server yok: Docker çalışmıyor ve VISABOT_TEST_SQLSERVER tanımlı değil.";
+            Skip = "PostgreSQL yok: Docker çalışmıyor ve VISABOT_TEST_POSTGRES tanımlı değil.";
         }
     }
 }
 
-internal enum SqlServerMode
+internal enum PostgresMode
 {
     Unavailable,
     External,
     Docker
 }
 
-internal static class SqlServerAvailability
+internal static class PostgresAvailability
 {
-    private static readonly Lazy<SqlServerMode> LazyMode = new(Detect);
+    private static readonly Lazy<PostgresMode> LazyMode = new(Detect);
 
-    public static string? ExternalConnectionString => Environment.GetEnvironmentVariable("VISABOT_TEST_SQLSERVER");
+    public static string? ExternalConnectionString => Environment.GetEnvironmentVariable("VISABOT_TEST_POSTGRES");
 
-    public static SqlServerMode Mode => LazyMode.Value;
+    public static PostgresMode Mode => LazyMode.Value;
 
-    private static SqlServerMode Detect()
+    private static PostgresMode Detect()
     {
         if (!string.IsNullOrWhiteSpace(ExternalConnectionString))
         {
-            return SqlServerMode.External;
+            return PostgresMode.External;
         }
 
-        return IsDockerRunning() ? SqlServerMode.Docker : SqlServerMode.Unavailable;
+        return IsDockerRunning() ? PostgresMode.Docker : PostgresMode.Unavailable;
     }
 
     private static bool IsDockerRunning()

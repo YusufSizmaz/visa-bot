@@ -7,7 +7,6 @@ import { LoginPage } from './auth/LoginPage'
 import { RequireApiKey } from './auth/RequireApiKey'
 import { Layout } from './components/Layout'
 import { DashboardPage } from './features/dashboard/DashboardPage'
-import { FlightsPage } from './features/flights/FlightsPage'
 import { MessagesPage } from './features/messages/MessagesPage'
 import { NewsPage } from './features/news/NewsPage'
 import { SourcesPage } from './features/sources/SourcesPage'
@@ -22,7 +21,6 @@ export function App() {
           <Route element={<Layout />}>
             <Route index element={<DashboardPage />} />
             <Route path="messages" element={<MessagesPage />} />
-            <Route path="flights" element={<FlightsPage />} />
             <Route path="sources" element={<SourcesPage />} />
             <Route path="news" element={<NewsPage />} />
           </Route>

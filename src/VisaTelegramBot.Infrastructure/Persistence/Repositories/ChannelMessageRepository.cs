@@ -1,26 +1,32 @@
 using System.Data;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using NpgsqlTypes;
 using VisaTelegramBot.Application.Abstractions.Persistence;
 using VisaTelegramBot.Domain.ChannelMessages;
+using VisaTelegramBot.Infrastructure.Persistence.Converters;
 
 namespace VisaTelegramBot.Infrastructure.Persistence.Repositories;
 
 internal sealed class ChannelMessageRepository(AppDbContext dbContext) : IChannelMessageRepository
 {
-    // NewsItemRepository'deki kuyruk sorgusuyla ayni desen: UPDLOCK + READPAST + tek atomik UPDATE.
+    // NewsItemRepository'deki kuyruk sorgusuyla ayni desen: FOR UPDATE SKIP LOCKED + tek atomik UPDATE.
     private const string ClaimSql = """
         WITH claimable AS (
-            SELECT TOP (@batchSize) [Id], [LockedUntilUtc]
-            FROM [ChannelMessages] WITH (UPDLOCK, READPAST, ROWLOCK)
-            WHERE [Status] = @scheduledStatus
-              AND [ScheduledAtUtc] <= @utcNow
-              AND ([LockedUntilUtc] IS NULL OR [LockedUntilUtc] < @utcNow)
-            ORDER BY [ScheduledAtUtc], [CreatedAtUtc]
+            SELECT "Id"
+            FROM "ChannelMessages"
+            WHERE "Status" = @scheduledStatus
+              AND "ScheduledAtUtc" <= @utcNow
+              AND ("LockedUntilUtc" IS NULL OR "LockedUntilUtc" < @utcNow)
+            ORDER BY "ScheduledAtUtc", "CreatedAtUtc"
+            LIMIT @batchSize
+            FOR UPDATE SKIP LOCKED
         )
-        UPDATE claimable
-        SET [LockedUntilUtc] = @lockedUntilUtc
-        OUTPUT inserted.[Id];
+        UPDATE "ChannelMessages" AS message
+        SET "LockedUntilUtc" = @lockedUntilUtc
+        FROM claimable
+        WHERE message."Id" = claimable."Id"
+        RETURNING message."Id";
         """;
 
     public Task<ChannelMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
@@ -46,10 +52,10 @@ internal sealed class ChannelMessageRepository(AppDbContext dbContext) : IChanne
         {
             await using var command = connection.CreateCommand();
             command.CommandText = ClaimSql;
-            command.Parameters.Add(new SqlParameter("@batchSize", SqlDbType.Int) { Value = batchSize });
-            command.Parameters.Add(new SqlParameter("@scheduledStatus", SqlDbType.Int) { Value = (int)ChannelMessageStatus.Scheduled });
-            command.Parameters.Add(new SqlParameter("@utcNow", SqlDbType.DateTime2) { Value = utcNow });
-            command.Parameters.Add(new SqlParameter("@lockedUntilUtc", SqlDbType.DateTime2) { Value = lockedUntilUtc });
+            command.Parameters.Add(new NpgsqlParameter("batchSize", NpgsqlDbType.Integer) { Value = batchSize });
+            command.Parameters.Add(new NpgsqlParameter("scheduledStatus", NpgsqlDbType.Integer) { Value = (int)ChannelMessageStatus.Scheduled });
+            command.Parameters.Add(new NpgsqlParameter("utcNow", NpgsqlDbType.TimestampTz) { Value = UtcDateTime.Normalize(utcNow) });
+            command.Parameters.Add(new NpgsqlParameter("lockedUntilUtc", NpgsqlDbType.TimestampTz) { Value = UtcDateTime.Normalize(lockedUntilUtc) });
 
             var ids = new List<Guid>(batchSize);
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);

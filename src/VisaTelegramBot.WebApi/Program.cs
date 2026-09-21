@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using Serilog;
 using VisaTelegramBot.Application;
@@ -39,6 +40,19 @@ try
         .AddControllers()
         .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
+    // Panel nginx'in, nginx de Coolify'in ters vekili arkasinda calisir. Gercek istemci IP'si
+    // X-Forwarded-For'dan okunmazsa hiz limiti ve istek loglari tek bir vekil adresi gorur.
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+        // Container aglarinda vekillerin adresi onceden bilinmez. Bu yuzden liste temizlenir;
+        // guvenlik, API portunun disariya acilmamasindan gelir (bkz. compose.production.yaml).
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+        options.ForwardLimit = 2;
+    });
+
     builder.Services.AddProblemDetails();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddOpenApi(options => options.AddDocumentTransformer<ApiKeySecuritySchemeTransformer>());
@@ -54,6 +68,7 @@ try
 
     await app.SeedNewsSourcesAsync();
 
+    app.UseForwardedHeaders();
     app.UseExceptionHandler();
     app.UseStatusCodePages();
     app.UseSerilogRequestLogging();

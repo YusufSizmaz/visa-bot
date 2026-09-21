@@ -1,7 +1,6 @@
 import { Link } from 'react-router'
 import { Card, EmptyState, ErrorAlert, Spinner, StatusBadge } from '../../components/ui'
 import { formatDateTime, formatNumber, formatRelative } from '../../lib/format'
-import { useFlightDeals } from '../flights/hooks'
 import { useChannelOverview } from '../messages/hooks'
 import { useNewsItems, useNewsStats } from '../news/hooks'
 import { useSources } from '../sources/hooks'
@@ -10,7 +9,6 @@ export function DashboardPage() {
   const overview = useChannelOverview()
   const stats = useNewsStats()
   const sources = useSources()
-  const newDeals = useFlightDeals('New')
   const recent = useNewsItems({ status: 'Delivered', pageSize: 5 })
 
   const problemSources = (sources.data ?? []).filter((source) => !source.isActive || source.consecutiveFailureCount > 0)
@@ -28,15 +26,12 @@ export function DashboardPage() {
           <Link to="/messages" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
             ✍️ Mesaj yaz
           </Link>
-          <Link to="/flights" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-            ✈️ Fırsatlar
-          </Link>
         </div>
       </div>
 
       <ErrorAlert error={stats.error} />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <StatCard
           label="Kanal abonesi"
           value={channel?.memberCount ?? undefined}
@@ -44,7 +39,6 @@ export function DashboardPage() {
           hint={channel ? channel.title : overview.isPending ? undefined : 'Kanal bilgisi alınamadı'}
         />
         <StatCard label="Zamanlanmış mesaj" value={overview.data?.scheduledMessages} accent="text-sky-600" to="/messages" />
-        <StatCard label="Karar bekleyen uçuş fırsatı" value={newDeals.data?.length} accent="text-violet-600" to="/flights" />
         <StatCard label="Son 24 saatte giden haber" value={stats.data?.deliveredLast24Hours} to="/news?status=Delivered" />
       </div>
 

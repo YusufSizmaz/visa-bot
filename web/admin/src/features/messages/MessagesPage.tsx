@@ -266,7 +266,6 @@ function MessageRow({ message }: { message: ChannelMessage }) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Badge className={style.className}>{style.label}</Badge>
-          {message.kind === 'FlightDeal' && <Badge className="bg-violet-50 text-violet-700 ring-violet-200">Uçuş fırsatı</Badge>}
           {message.title && <span className="font-medium">{message.title}</span>}
         </div>
         <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-slate-600">{message.body}</p>

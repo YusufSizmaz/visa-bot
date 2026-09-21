@@ -17,12 +17,3 @@ public sealed class CreateChannelMessageRequest
     /// <summary>Bos ise hemen gonderilir. Saat dilimi bilgisiyle gelmeli (ISO 8601), orn. 2026-09-20T09:00:00+03:00.</summary>
     public DateTimeOffset? ScheduledAt { get; init; }
 }
-
-public sealed record SaveFlightRouteRequest(
-    string Origin,
-    string Destination,
-    string? Label,
-    decimal MaxPrice,
-    int MonthsAhead = 3,
-    int CheckIntervalMinutes = 360,
-    bool AutoPublish = false);

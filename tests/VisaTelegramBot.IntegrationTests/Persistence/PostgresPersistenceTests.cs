@@ -10,12 +10,12 @@ using VisaTelegramBot.Infrastructure.Persistence.Repositories;
 
 namespace VisaTelegramBot.IntegrationTests.Persistence;
 
-[Collection(SqlServerCollection.Name)]
-public sealed class SqlServerPersistenceTests(SqlServerFixture fixture)
+[Collection(PostgresCollection.Name)]
+public sealed class PostgresPersistenceTests(PostgresFixture fixture)
 {
     private static readonly DateTime Now = new(2026, 9, 10, 12, 0, 0, DateTimeKind.Utc);
 
-    [SqlServerFact]
+    [PostgresFact]
     public async Task NewsSource_RoundTripsValueObjectsAndUtcDates()
     {
         var rules = HtmlParsingRules.Create("article", "h2", "a", "p", "time");
@@ -35,7 +35,7 @@ public sealed class SqlServerPersistenceTests(SqlServerFixture fixture)
         Assert.Equal(Now.AddMinutes(1), loaded.LastFetchedAtUtc);
     }
 
-    [SqlServerFact]
+    [PostgresFact]
     public async Task DuplicateContentHash_IsRejectedByUniqueIndex()
     {
         var source = await CreateSourceAsync();
@@ -46,10 +46,10 @@ public sealed class SqlServerPersistenceTests(SqlServerFixture fixture)
         await using var dbContext = fixture.CreateDbContext();
         dbContext.NewsItems.Add(NewsItem.Discover(source.Id, "İki", WebUrl.Create(url.Value + "?utm_source=x"), null, null, Now.AddTicks(1)));
 
-        await Assert.ThrowsAsync<UniqueConstraintViolationException>(() => SqlServerFixture.CreateUnitOfWork(dbContext).SaveChangesAsync());
+        await Assert.ThrowsAsync<UniqueConstraintViolationException>(() => PostgresFixture.CreateUnitOfWork(dbContext).SaveChangesAsync());
     }
 
-    [SqlServerFact]
+    [PostgresFact]
     public async Task ConcurrentClaims_NeverReturnSameItem()
     {
         var source = await CreateSourceAsync();
@@ -83,10 +83,10 @@ public sealed class SqlServerPersistenceTests(SqlServerFixture fixture)
         Assert.Equal(items.Count, afterExpiry.Count(id => items.Any(item => item.Id == id)));
     }
 
-    [SqlServerFact]
+    [PostgresFact]
     public async Task DistributedLock_IsExclusiveUntilReleased()
     {
-        var provider = new SqlServerDistributedLockProvider(fixture.ConnectionString);
+        var provider = new PostgresDistributedLockProvider(fixture.ConnectionString);
         var resource = $"test-lock:{Guid.NewGuid():N}";
 
         var first = await provider.TryAcquireAsync(resource, CancellationToken.None);
@@ -102,7 +102,7 @@ public sealed class SqlServerPersistenceTests(SqlServerFixture fixture)
         await third!.DisposeAsync();
     }
 
-    [SqlServerFact]
+    [PostgresFact]
     public async Task KeysetPagination_ReturnsEveryItemExactlyOnce()
     {
         var source = await CreateSourceAsync();
@@ -144,7 +144,7 @@ public sealed class SqlServerPersistenceTests(SqlServerFixture fixture)
     {
         await using var dbContext = fixture.CreateDbContext();
         change(dbContext);
-        await SqlServerFixture.CreateUnitOfWork(dbContext).SaveChangesAsync();
+        await PostgresFixture.CreateUnitOfWork(dbContext).SaveChangesAsync();
     }
 
     private static WebUrl UniqueUrl() => WebUrl.Create($"https://example.com/{Guid.NewGuid():N}");
