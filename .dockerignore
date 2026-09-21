@@ -8,4 +8,11 @@
 tests/
 .env
 docker-compose*.yml
+compose*.yaml
 README.md
+DEPLOY.md
+
+# api ve worker imajlari yalnizca src/ altini kopyalar. Panelin kaynaklari (ozellikle
+# node_modules) build baglamina girerse her derlemede bosuna yuzlerce MB aktarilir.
+# Panelin kendi build baglami web/admin'dir, oradaki .dockerignore ayrica gecerlidir.
+web/

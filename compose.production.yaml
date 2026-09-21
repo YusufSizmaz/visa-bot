@@ -1,0 +1,126 @@
+# Coolify uretim yigini. Yerel gelistirme icin docker-compose.yml kullanilir.
+#
+# Bu dosyanin iki kurali var:
+#   1. Disariya sadece "admin" servisi acilir. Panel hem SPA'yi sunar hem /api'yi API'ye aktarir,
+#      yani visa.codynlab.dev tek basina yeterlidir. postgres, redis ve api yalnizca ic agda durur.
+#   2. Hicbir gizli degerin varsayilani yoktur. ${VAR:?...} sozdizimi, degisken tanimli degilse
+#      dagitimi anlasilir bir hatayla durdurur; sessizce zayif bir parola ile ayaga kalkmaz.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-VisaTelegramBot}
+      POSTGRES_USER: ${POSTGRES_USER:-visabot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Coolify ortam degiskenlerinde POSTGRES_PASSWORD tanimlayin}
+      # Turkce sıralama ve buyuk/kucuk harf davranisi icin veritabani C.UTF-8 ile kurulur.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-visabot} -d ${POSTGRES_DB:-VisaTelegramBot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  redis:
+    image: redis:7-alpine
+    # Onbellek kalicilik istemez: yeniden baslayinca bos baslamasi sorun degil, diski mesgul etmesi sorun.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "192mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  api:
+    build:
+      context: .
+      dockerfile: src/VisaTelegramBot.WebApi/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-VisaTelegramBot};Username=${POSTGRES_USER:-visabot};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD gerekli}"
+      ConnectionStrings__Redis: "redis:6379"
+      # Migration'lari tek bir yer uygular: API. Worker tablolarin hazir olmasini bekler.
+      Database__ApplyMigrationsOnStartup: "true"
+      Security__ApiKey: ${API_KEY:?Panel girisi icin API_KEY tanimlayin (en az 16 karakter)}
+      # Panelde kanal adi ve abone sayisini gosterebilmek icin; mesaj gondermez.
+      Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:-}
+      Telegram__ChannelId: ${TELEGRAM_CHANNEL_ID:-}
+    # "expose" host'a port acmaz; sadece ic agdaki servisler erisir.
+    expose:
+      - "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  worker:
+    build:
+      context: .
+      dockerfile: src/VisaTelegramBot.Worker/Dockerfile
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-VisaTelegramBot};Username=${POSTGRES_USER:-visabot};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD gerekli}"
+      ConnectionStrings__Redis: "redis:6379"
+      # Bunlar bos ise Worker acilista ValidateOnStart ile durur: sessizce yayin yapmamasi icin.
+      Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:?BotFather token'i gerekli}
+      Telegram__ChannelId: ${TELEGRAM_CHANNEL_ID:?Yayin yapilacak kanal gerekli}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # Tablolar olusmadan haber cekmeye calismasin.
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  admin:
+    build:
+      context: web/admin
+    # Coolify bu servise visa.codynlab.dev alan adini baglar ve HTTPS sertifikasini kendisi yonetir.
+    expose:
+      - "80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+volumes:
+  postgres-data:

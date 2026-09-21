@@ -17,6 +17,12 @@ RUN dotnet publish src/VisaTelegramBot.WebApi/VisaTelegramBot.WebApi.csproj -c R
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
+# Container healthcheck'i HTTP istegi atabilsin diye. aspnet imajinda ne curl ne wget bulunur;
+# bu satir olmadan /health kontrolu her zaman basarisiz olur ve servis "healthy" olamaz.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Guvenlik: container root olarak degil, imajdaki yetkisiz "app" kullanicisiyla calisir.
 USER $APP_UID
 ENV ASPNETCORE_HTTP_PORTS=8080
