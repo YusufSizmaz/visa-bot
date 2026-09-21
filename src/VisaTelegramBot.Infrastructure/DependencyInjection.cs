@@ -54,7 +54,7 @@ public static class DependencyInjection
         AddCaching(services, configuration);
         AddScraping(services, configuration);
 
-        services.AddSingleton<IDistributedLockProvider>(new SqlServerDistributedLockProvider(connectionString));
+        services.AddSingleton<IDistributedLockProvider>(new PostgresDistributedLockProvider(connectionString));
 
         // Yayinci kaydi yoksa Null Object kullanilir. AddTelegramPublishing bunu degistirir.
         services.TryAddTransient<INewsPublisher, NullNewsPublisher>();
@@ -98,9 +98,9 @@ public static class DependencyInjection
     private static void AddPersistence(IServiceCollection services, string connectionString)
     {
         // DbContext pooling: her istekte yeni DbContext kurmak yerine havuzdan hazir nesne alinir.
-        services.AddDbContextPool<AppDbContext>(options => options.UseSqlServer(
+        services.AddDbContextPool<AppDbContext>(options => options.UseNpgsql(
             connectionString,
-            sqlServer => sqlServer.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null)));
+            npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorCodesToAdd: null)));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<INewsSourceRepository, NewsSourceRepository>();

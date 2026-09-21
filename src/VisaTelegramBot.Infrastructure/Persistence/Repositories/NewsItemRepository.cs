@@ -1,32 +1,37 @@
 using System.Data;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using NpgsqlTypes;
 using VisaTelegramBot.Application.Abstractions.Persistence;
 using VisaTelegramBot.Domain.NewsItems;
+using VisaTelegramBot.Infrastructure.Persistence.Converters;
 
 namespace VisaTelegramBot.Infrastructure.Persistence.Repositories;
 
 internal sealed class NewsItemRepository(AppDbContext dbContext) : INewsItemRepository
 {
     /// <summary>
-    /// "Competing consumers" icin SQL Server'daki klasik kuyruk sorgusu:
-    /// UPDLOCK  satiri okurken kilitler, baska islem ayni satiri alamaz.
-    /// READPAST kilitli satirlari beklemek yerine atlar; worker'lar birbirini bloklamaz.
-    /// ROWLOCK  kilidi tablo yerine satir seviyesinde tutar.
-    /// Secme ve isaretleme tek bir atomik UPDATE ile yapilir.
+    /// "Competing consumers" icin PostgreSQL'deki klasik kuyruk sorgusu:
+    /// FOR UPDATE      secilen satirlari kilitler, baska islem ayni satiri alamaz.
+    /// SKIP LOCKED     kilitli satirlari beklemek yerine atlar; worker'lar birbirini bloklamaz.
+    /// Secme ve isaretleme tek bir atomik UPDATE ile yapilir, alinan kimlikler RETURNING ile doner.
     /// </summary>
     private const string ClaimSql = """
         WITH claimable AS (
-            SELECT TOP (@batchSize) [Id], [DeliveryLockedUntilUtc]
-            FROM [NewsItems] WITH (UPDLOCK, READPAST, ROWLOCK)
-            WHERE [DeliveryStatus] = @pendingStatus
-              AND [NextDeliveryAttemptAtUtc] <= @utcNow
-              AND ([DeliveryLockedUntilUtc] IS NULL OR [DeliveryLockedUntilUtc] < @utcNow)
-            ORDER BY [DiscoveredAtUtc], [Id]
+            SELECT "Id"
+            FROM "NewsItems"
+            WHERE "DeliveryStatus" = @pendingStatus
+              AND "NextDeliveryAttemptAtUtc" <= @utcNow
+              AND ("DeliveryLockedUntilUtc" IS NULL OR "DeliveryLockedUntilUtc" < @utcNow)
+            ORDER BY "DiscoveredAtUtc", "Id"
+            LIMIT @batchSize
+            FOR UPDATE SKIP LOCKED
         )
-        UPDATE claimable
-        SET [DeliveryLockedUntilUtc] = @lockedUntilUtc
-        OUTPUT inserted.[Id];
+        UPDATE "NewsItems" AS item
+        SET "DeliveryLockedUntilUtc" = @lockedUntilUtc
+        FROM claimable
+        WHERE item."Id" = claimable."Id"
+        RETURNING item."Id";
         """;
 
     public Task<NewsItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -72,10 +77,10 @@ internal sealed class NewsItemRepository(AppDbContext dbContext) : INewsItemRepo
         {
             await using var command = connection.CreateCommand();
             command.CommandText = ClaimSql;
-            command.Parameters.Add(new SqlParameter("@batchSize", SqlDbType.Int) { Value = batchSize });
-            command.Parameters.Add(new SqlParameter("@pendingStatus", SqlDbType.Int) { Value = (int)DeliveryStatus.Pending });
-            command.Parameters.Add(new SqlParameter("@utcNow", SqlDbType.DateTime2) { Value = utcNow });
-            command.Parameters.Add(new SqlParameter("@lockedUntilUtc", SqlDbType.DateTime2) { Value = lockedUntilUtc });
+            command.Parameters.Add(new NpgsqlParameter("batchSize", NpgsqlDbType.Integer) { Value = batchSize });
+            command.Parameters.Add(new NpgsqlParameter("pendingStatus", NpgsqlDbType.Integer) { Value = (int)DeliveryStatus.Pending });
+            command.Parameters.Add(new NpgsqlParameter("utcNow", NpgsqlDbType.TimestampTz) { Value = UtcDateTime.Normalize(utcNow) });
+            command.Parameters.Add(new NpgsqlParameter("lockedUntilUtc", NpgsqlDbType.TimestampTz) { Value = UtcDateTime.Normalize(lockedUntilUtc) });
 
             var ids = new List<Guid>(batchSize);
 

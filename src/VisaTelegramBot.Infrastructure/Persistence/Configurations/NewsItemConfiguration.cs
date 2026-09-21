@@ -12,16 +12,14 @@ internal sealed class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
     {
         builder.ToTable("NewsItems");
 
-        // SQL Server uniqueidentifier degerlerini .NET'ten farkli bir bayt sirasiyla karsilastirir.
-        // Bu yuzden Guid v7 bile SQL Server'da sirali degildir ve clustered anahtar olursa her insert
-        // index'in ortasina duser (page split). Clustered index'i zaman sirali kolona veririz.
-        builder.HasKey(item => item.Id).IsClustered(false);
+        builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).ValueGeneratedNever();
 
+        // Keyset sayfalama bu sirayi kullanir. PostgreSQL'de tablolar heap'tir; sira,
+        // birincil anahtar yerine bu tekil index uzerinden okunur.
         builder.HasIndex(item => new { item.DiscoveredAtUtc, item.Id })
             .IsUnique()
-            .IsClustered()
-            .HasDatabaseName("CIX_NewsItems_DiscoveredAtUtc_Id");
+            .HasDatabaseName("IX_NewsItems_DiscoveredAtUtc_Id");
 
         // Aggregate'ler arasi iliski sadece yabanci anahtar olarak; navigation property yok.
         builder.HasOne<NewsSource>()
@@ -42,7 +40,6 @@ internal sealed class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
             .HasConversion(hash => hash.Value, value => ContentHash.FromValue(value))
             .HasMaxLength(ContentHash.Length)
             .IsFixedLength()
-            .IsUnicode(false)
             .IsRequired();
 
         // Ayni haberin iki kez kaydedilmesine karsi son savunma hatti. Uygulama kontrolu yarisa girebilir, index giremez.
@@ -55,11 +52,11 @@ internal sealed class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
         builder.Property(item => item.ExternalMessageId).HasMaxLength(NewsItem.ExternalMessageIdMaxLength);
         builder.Property(item => item.LastDeliveryError).HasMaxLength(NewsItem.LastDeliveryErrorMaxLength);
 
-        builder.Property<byte[]>("RowVersion").IsRowVersion();
+        builder.Property<uint>("xmin").HasColumnName("xmin").IsRowVersion();
 
-        // Filtered index: sadece bekleyen haberleri icerir. Tablo milyonlarca satira ulassa da kucuk kalir.
+        // Kismi (partial) index: sadece bekleyen haberleri icerir. Tablo milyonlarca satira ulassa da kucuk kalir.
         builder.HasIndex(item => item.NextDeliveryAttemptAtUtc)
-            .HasFilter($"[{nameof(NewsItem.DeliveryStatus)}] = {(int)DeliveryStatus.Pending}")
+            .HasFilter($"\"{nameof(NewsItem.DeliveryStatus)}\" = {(int)DeliveryStatus.Pending}")
             .IncludeProperties(item => new { item.DeliveryLockedUntilUtc })
             .HasDatabaseName("IX_NewsItems_Pending");
 

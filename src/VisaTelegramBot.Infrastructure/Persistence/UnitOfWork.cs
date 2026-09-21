@@ -1,7 +1,7 @@
 using MediatR;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using VisaTelegramBot.Application.Abstractions.Messaging;
 using VisaTelegramBot.Application.Abstractions.Persistence;
 using VisaTelegramBot.Domain.Common;
@@ -13,8 +13,8 @@ internal sealed class UnitOfWork(
     IPublisher publisher,
     ILogger<UnitOfWork> logger) : IUnitOfWork
 {
-    private const int UniqueIndexViolation = 2601;
-    private const int UniqueConstraintViolation = 2627;
+    /// <summary>PostgreSQL "unique_violation" SQLSTATE kodu.</summary>
+    private const string UniqueViolation = "23505";
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -77,6 +77,6 @@ internal sealed class UnitOfWork(
 
     private static bool IsUniqueViolation(DbUpdateException exception)
     {
-        return exception.InnerException is SqlException { Number: UniqueIndexViolation or UniqueConstraintViolation };
+        return exception.InnerException is PostgresException { SqlState: UniqueViolation };
     }
 }

@@ -6,13 +6,13 @@ using VisaTelegramBot.Infrastructure.Persistence.Repositories;
 
 namespace VisaTelegramBot.IntegrationTests.Persistence;
 
-[Collection(SqlServerCollection.Name)]
-public sealed class ChannelMessagePersistenceTests(SqlServerFixture fixture)
+[Collection(PostgresCollection.Name)]
+public sealed class ChannelMessagePersistenceTests(PostgresFixture fixture)
 {
     private static readonly DateTime Now = new(2026, 9, 10, 12, 0, 0, DateTimeKind.Utc);
     private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3];
 
-    [SqlServerFact]
+    [PostgresFact]
     public async Task MessageWithPhotoAndButton_RoundTrips_AndListDoesNotNeedPhotoBytes()
     {
         var message = ChannelMessage.Create(
@@ -30,7 +30,7 @@ public sealed class ChannelMessagePersistenceTests(SqlServerFixture fixture)
         await using (var dbContext = fixture.CreateDbContext())
         {
             dbContext.ChannelMessages.AddRange(message, plain);
-            await SqlServerFixture.CreateUnitOfWork(dbContext).SaveChangesAsync();
+            await PostgresFixture.CreateUnitOfWork(dbContext).SaveChangesAsync();
         }
 
         await using (var readContext = fixture.CreateDbContext())
@@ -54,7 +54,7 @@ public sealed class ChannelMessagePersistenceTests(SqlServerFixture fixture)
         }
     }
 
-    [SqlServerFact]
+    [PostgresFact]
     public async Task Claim_ReturnsOnlyDueScheduledMessages()
     {
         var due = ChannelMessage.Create(ChannelMessageKind.Custom, null, "Şimdi", null, null, null, null, Now);
@@ -65,7 +65,7 @@ public sealed class ChannelMessagePersistenceTests(SqlServerFixture fixture)
         await using (var dbContext = fixture.CreateDbContext())
         {
             dbContext.ChannelMessages.AddRange(due, later, cancelled);
-            await SqlServerFixture.CreateUnitOfWork(dbContext).SaveChangesAsync();
+            await PostgresFixture.CreateUnitOfWork(dbContext).SaveChangesAsync();
         }
 
         await using var claimContext = fixture.CreateDbContext();

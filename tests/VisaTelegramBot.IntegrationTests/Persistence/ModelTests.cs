@@ -16,7 +16,7 @@ public sealed class ModelTests : IDisposable
 {
     private readonly AppDbContext _dbContext = new(
         new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlServer("Server=localhost;Database=ModelOnly;Integrated Security=true;TrustServerCertificate=True")
+            .UseNpgsql("Host=localhost;Database=ModelOnly;Username=postgres;Password=model-only")
             .Options);
 
     [Theory]
@@ -32,13 +32,24 @@ public sealed class ModelTests : IDisposable
     }
 
     [Fact]
-    public void NewsItems_ClusteredIndexIsTimeOrdered_NotGuid()
+    public void NewsItems_KeysetIndexIsTimeOrdered_NotGuidOnly()
     {
         // Index ayrintilari calisma zamani modelinde tutulmaz; migration'larin kullandigi tasarim modeline bakariz.
         var entity = _dbContext.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(NewsItem))!;
 
-        Assert.False(entity.FindPrimaryKey()!.IsClustered());
-        Assert.Contains(entity.GetIndexes(), index => index.IsClustered() == true && index.IsUnique);
+        // Keyset sayfalama (DiscoveredAtUtc, Id) sirasina guvenir; bu tekil index olmadan sayfalama bozulur.
+        Assert.Contains(entity.GetIndexes(), index =>
+            index.IsUnique &&
+            index.Properties.Select(property => property.Name).SequenceEqual([nameof(NewsItem.DiscoveredAtUtc), nameof(NewsItem.Id)]));
+    }
+
+    [Fact]
+    public void NewsItems_UseXminAsConcurrencyToken()
+    {
+        var entity = _dbContext.Model.FindEntityType(typeof(NewsItem))!;
+
+        // PostgreSQL'de surum damgasi ayri bir kolon degil, sistem kolonu "xmin".
+        Assert.Contains(entity.GetProperties(), property => property.IsConcurrencyToken && property.GetColumnName() == "xmin");
     }
 
     [Fact]
@@ -61,7 +72,7 @@ public sealed class ModelTests : IDisposable
             .Where(item => item.DiscoveredAtUtc < at || (item.DiscoveredAtUtc == at && item.Id.CompareTo(id) < 0))
             .ToQueryString();
 
-        Assert.Contains("[Id] <", sql);
+        Assert.Contains("\"Id\" <", sql);
     }
 
     public void Dispose() => _dbContext.Dispose();

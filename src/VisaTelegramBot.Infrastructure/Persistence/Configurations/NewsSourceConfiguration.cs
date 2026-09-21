@@ -17,14 +17,14 @@ internal sealed class NewsSourceConfiguration : IEntityTypeConfiguration<NewsSou
     {
         builder.ToTable("NewsSources");
 
-        // GUID birincil anahtar clustered olursa SQL Server'da index parcalanir (asagida aciklamasi var).
-        builder.HasKey(source => source.Id).IsClustered(false);
+        builder.HasKey(source => source.Id);
         builder.Property(source => source.Id).ValueGeneratedNever();
 
+        // Keyset (cursor) sayfalama bu sirayi kullanir; tekil index hem sirayi hem de
+        // "ayni an + ayni id" ikiliginin olusmamasini garanti eder.
         builder.HasIndex(source => new { source.CreatedAtUtc, source.Id })
             .IsUnique()
-            .IsClustered()
-            .HasDatabaseName("CIX_NewsSources_CreatedAtUtc_Id");
+            .HasDatabaseName("IX_NewsSources_CreatedAtUtc_Id");
 
         builder.Property(source => source.Name)
             .HasMaxLength(NewsSource.NameMaxLength)
@@ -45,13 +45,14 @@ internal sealed class NewsSourceConfiguration : IEntityTypeConfiguration<NewsSou
             .HasConversion((ValueConverter)new KeywordFilterJsonConverter())
             .HasMaxLength(KeywordFilterJsonConverter.MaxLength);
 
-        // SQL Server "time" tipi 24 saati asamaz; araligi tick olarak (bigint) sakliyoruz.
+        // Araligi tick olarak (bigint) sakliyoruz; boylece saglayiciya ozgu interval tipine bagimli kalmayiz.
         builder.Property(source => source.FetchInterval).HasConversion<long>();
 
         builder.Property(source => source.LastFetchError).HasMaxLength(NewsSource.LastFetchErrorMaxLength);
 
-        // Optimistic concurrency: iki islem ayni kaydi ayni anda degistirirse ikincisi hata alir.
-        builder.Property<byte[]>("RowVersion").IsRowVersion();
+        // Optimistic concurrency: PostgreSQL'in her satirda tuttugu sistem kolonu "xmin" surum damgasi olarak kullanilir.
+        // Ek bir kolon ve tetikleyici gerekmez; satir her guncellendiginde deger kendiliginden degisir.
+        builder.Property<uint>("xmin").HasColumnName("xmin").IsRowVersion();
 
         builder.HasIndex(source => new { source.IsActive, source.NextFetchAtUtc })
             .HasDatabaseName("IX_NewsSources_IsActive_NextFetchAtUtc");
