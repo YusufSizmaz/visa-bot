@@ -33,13 +33,7 @@ try
         .ValidateOnStart();
 
     builder.Services.AddHostedService<NewsFetchScheduler>();
-    builder.Services.AddOptions<FlightDealSchedulerOptions>()
-        .Bind(builder.Configuration.GetSection(FlightDealSchedulerOptions.SectionName))
-        .ValidateDataAnnotations()
-        .ValidateOnStart();
-
     builder.Services.AddHostedService<ChannelDeliveryProcessor>();
-    builder.Services.AddHostedService<FlightDealScheduler>();
 
     // Graceful shutdown: kapanis sinyali geldiginde yarim kalan islere tamamlanmalari icin sure taninir.
     builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));

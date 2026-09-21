@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VisaTelegramBot.Application.ChannelMessages;
-using VisaTelegramBot.Application.FlightDeals;
 using VisaTelegramBot.Domain.ChannelMessages;
-using VisaTelegramBot.Domain.FlightDeals;
 
 namespace VisaTelegramBot.Infrastructure.Persistence.Queries;
 
@@ -77,61 +75,4 @@ internal sealed class ChannelMessageQueries(AppDbContext dbContext) : IChannelMe
 
     public Task<int> CountScheduledAsync(CancellationToken cancellationToken) =>
         dbContext.ChannelMessages.CountAsync(message => message.Status == ChannelMessageStatus.Scheduled, cancellationToken);
-}
-
-internal sealed class FlightDealQueries(AppDbContext dbContext) : IFlightDealQueries
-{
-    public async Task<IReadOnlyList<FlightRouteResponse>> ListRoutesAsync(CancellationToken cancellationToken)
-    {
-        var routes = await dbContext.FlightRoutes.AsNoTracking().OrderBy(route => route.Label).ToListAsync(cancellationToken);
-
-        return routes.Select(route => new FlightRouteResponse(
-                route.Id,
-                route.Origin.Value,
-                route.Destination.Value,
-                route.Label,
-                route.MaxPrice,
-                route.MonthsAhead,
-                (int)route.CheckInterval.TotalMinutes,
-                route.AutoPublish,
-                route.IsActive,
-                route.NextCheckAtUtc,
-                route.LastCheckedAtUtc,
-                route.LastError))
-            .ToList();
-    }
-
-    public async Task<IReadOnlyList<FlightDealResponse>> ListDealsAsync(FlightDealStatus? status, int limit, CancellationToken cancellationToken)
-    {
-        var query = dbContext.FlightDeals.AsNoTracking();
-
-        if (status is not null)
-        {
-            query = query.Where(deal => deal.Status == status);
-        }
-
-        var rows = await query
-            .Join(dbContext.FlightRoutes.AsNoTracking(), deal => deal.FlightRouteId, route => route.Id, (deal, route) => new { Deal = deal, route.Label })
-            .OrderByDescending(row => row.Deal.FoundAtUtc)
-            .Take(limit)
-            .ToListAsync(cancellationToken);
-
-        return rows.Select(row => new FlightDealResponse(
-                row.Deal.Id,
-                row.Deal.FlightRouteId,
-                row.Label,
-                row.Deal.Origin.Value,
-                row.Deal.Destination.Value,
-                row.Deal.DepartureAt,
-                row.Deal.Price,
-                row.Deal.Currency,
-                row.Deal.Airline,
-                row.Deal.FlightNumber,
-                row.Deal.Transfers,
-                row.Deal.BookingUrl.Value,
-                row.Deal.FoundAtUtc,
-                row.Deal.Status,
-                row.Deal.ChannelMessageId))
-            .ToList();
-    }
 }

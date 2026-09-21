@@ -7,7 +7,6 @@ import { Button } from './ui'
 const navItems = [
   { to: '/', label: 'Genel bakış', end: true },
   { to: '/messages', label: 'Mesaj gönder', end: false },
-  { to: '/flights', label: 'Uçuş fırsatları', end: false },
   { to: '/news', label: 'Haberler', end: false },
   { to: '/sources', label: 'Kaynaklar', end: false },
 ]

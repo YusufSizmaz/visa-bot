@@ -5,11 +5,6 @@ import type {
   ChannelMessageStatus,
   ChannelOverview,
   CursorPage,
-  FlightCheckResult,
-  FlightDeal,
-  FlightDealStatus,
-  FlightRoute,
-  FlightRouteInput,
   FetchResult,
   NewsItem,
   NewsItemFilter,
@@ -82,30 +77,6 @@ export function createApi(apiKey: string) {
 
     channelMessagePhoto: (id: string, signal?: AbortSignal) =>
       apiBlob(apiKey, `/api/channel-messages/${id}/photo`, signal),
-
-    listFlightRoutes: (signal?: AbortSignal) =>
-      apiRequest<FlightRoute[]>(apiKey, '/api/flight-routes', { signal }),
-
-    saveFlightRoute: (id: string | null, input: FlightRouteInput) =>
-      apiRequest<{ id: string }>(apiKey, id ? `/api/flight-routes/${id}` : '/api/flight-routes', {
-        method: id ? 'PUT' : 'POST',
-        body: input,
-      }),
-
-    setFlightRouteActive: (id: string, active: boolean) =>
-      apiRequest<void>(apiKey, `/api/flight-routes/${id}/${active ? 'activate' : 'deactivate'}`, { method: 'POST' }),
-
-    checkFlightRoute: (id: string) =>
-      apiRequest<FlightCheckResult>(apiKey, `/api/flight-routes/${id}/check`, { method: 'POST' }),
-
-    listFlightDeals: (status: FlightDealStatus | undefined, signal?: AbortSignal) =>
-      apiRequest<FlightDeal[]>(apiKey, '/api/flight-deals', { signal, query: { status, limit: 100 } }),
-
-    publishFlightDeal: (id: string) =>
-      apiRequest<{ id: string }>(apiKey, `/api/flight-deals/${id}/publish`, { method: 'POST' }),
-
-    dismissFlightDeal: (id: string) =>
-      apiRequest<void>(apiKey, `/api/flight-deals/${id}/dismiss`, { method: 'POST' }),
   }
 }
 
@@ -123,6 +94,4 @@ export const queryKeys = {
   allNewsItems: ['news-items'] as const,
   channel: ['channel'] as const,
   channelMessages: ['channel-messages'] as const,
-  flightRoutes: ['flight-routes'] as const,
-  flightDeals: ['flight-deals'] as const,
 }

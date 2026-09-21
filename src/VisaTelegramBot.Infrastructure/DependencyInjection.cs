@@ -10,8 +10,6 @@ using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using VisaTelegramBot.Application.Abstractions.Caching;
 using VisaTelegramBot.Application.ChannelMessages;
-using VisaTelegramBot.Application.FlightDeals;
-using VisaTelegramBot.Infrastructure.FlightPrices;
 using VisaTelegramBot.Application.Abstractions.Locking;
 using VisaTelegramBot.Application.Abstractions.Persistence;
 using VisaTelegramBot.Application.Abstractions.Publishing;
@@ -62,8 +60,6 @@ public static class DependencyInjection
         services.TryAddTransient<INewsPublisher, NullNewsPublisher>();
         services.TryAddTransient<IChannelInfoProvider, NullChannelInfoProvider>();
 
-        AddFlightPrices(services, configuration);
-
         services.AddHealthChecks()
             .AddDbContextCheck<AppDbContext>("database", tags: ["ready"]);
 
@@ -113,30 +109,6 @@ public static class DependencyInjection
         services.AddScoped<INewsItemQueries, NewsItemQueries>();
         services.AddScoped<IChannelMessageRepository, ChannelMessageRepository>();
         services.AddScoped<IChannelMessageQueries, ChannelMessageQueries>();
-        services.AddScoped<IFlightRouteRepository, FlightRouteRepository>();
-        services.AddScoped<IFlightDealRepository, FlightDealRepository>();
-        services.AddScoped<IFlightDealQueries, FlightDealQueries>();
-    }
-
-    private static void AddFlightPrices(IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<FlightDealOptions>()
-            .Bind(configuration.GetSection(FlightDealOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddOptions<TravelpayoutsOptions>()
-            .Bind(configuration.GetSection(TravelpayoutsOptions.SectionName));
-
-        // Typed client: HttpClient, IHttpClientFactory tarafindan yonetilir ve saglayici sinifina enjekte edilir.
-        // Okuma istegi idempotent oldugu icin burada standart retry + circuit breaker guvenle kullanilabilir.
-        services.AddHttpClient<IFlightPriceProvider, TravelpayoutsFlightPriceProvider>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.travelpayouts.com");
-                client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json");
-                client.Timeout = Timeout.InfiniteTimeSpan;
-            })
-            .AddStandardResilienceHandler();
     }
 
     private static void AddCaching(IServiceCollection services, IConfiguration configuration)

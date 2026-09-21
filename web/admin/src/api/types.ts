@@ -78,7 +78,7 @@ export type ChannelMessageStatus = 'Scheduled' | 'Sent' | 'Failed' | 'Cancelled'
 
 export interface ChannelMessage {
   id: string
-  kind: 'Custom' | 'FlightDeal'
+  kind: 'Custom'
   title: string | null
   body: string
   linkUrl: string | null
@@ -114,59 +114,6 @@ export interface ChannelMessageInput {
 export interface ChannelOverview {
   channel: { title: string; username: string | null; memberCount: number | null } | null
   scheduledMessages: number
-}
-
-export interface FlightRoute {
-  id: string
-  origin: string
-  destination: string
-  label: string
-  maxPrice: number
-  monthsAhead: number
-  checkIntervalMinutes: number
-  autoPublish: boolean
-  isActive: boolean
-  nextCheckAtUtc: string
-  lastCheckedAtUtc: string | null
-  lastError: string | null
-}
-
-export interface FlightRouteInput {
-  origin: string
-  destination: string
-  label: string | null
-  maxPrice: number
-  monthsAhead: number
-  checkIntervalMinutes: number
-  autoPublish: boolean
-}
-
-export type FlightDealStatus = 'New' | 'Published' | 'Dismissed'
-
-export interface FlightDeal {
-  id: string
-  flightRouteId: string
-  routeLabel: string
-  origin: string
-  destination: string
-  departureAt: string
-  price: number
-  currency: string
-  airline: string | null
-  flightNumber: string | null
-  transfers: number
-  bookingUrl: string
-  foundAtUtc: string
-  status: FlightDealStatus
-  channelMessageId: string | null
-}
-
-export interface FlightCheckResult {
-  flightRouteId: string
-  skipped: boolean
-  offersRead: number
-  newDeals: number
-  autoPublished: number
 }
 
 export interface CursorPage<T> {

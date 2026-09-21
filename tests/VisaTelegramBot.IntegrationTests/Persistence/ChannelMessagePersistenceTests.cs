@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VisaTelegramBot.Domain.ChannelMessages;
 using VisaTelegramBot.Domain.Common;
-using VisaTelegramBot.Domain.FlightDeals;
 using VisaTelegramBot.Infrastructure.Persistence.Queries;
 using VisaTelegramBot.Infrastructure.Persistence.Repositories;
 
@@ -75,39 +74,5 @@ public sealed class ChannelMessagePersistenceTests(SqlServerFixture fixture)
         Assert.Contains(due.Id, claimed);
         Assert.DoesNotContain(later.Id, claimed);
         Assert.DoesNotContain(cancelled.Id, claimed);
-    }
-
-    [SqlServerFact]
-    public async Task FlightRouteAndDeal_RoundTrip_AndDealKeyIsUnique()
-    {
-        var route = FlightRoute.Create(
-            AirportCode.Create("IST"), AirportCode.Create("MAD"), "İstanbul → Madrid", 3500m, 3, TimeSpan.FromHours(6), false, Now);
-
-        var departure = new DateTimeOffset(2026, 10, 12, 6, 55, 0, TimeSpan.FromHours(3));
-        var url = WebUrl.Create("https://www.aviasales.com/search/IST1210MAD1");
-
-        await using (var dbContext = fixture.CreateDbContext())
-        {
-            dbContext.FlightRoutes.Add(route);
-            dbContext.FlightDeals.Add(FlightDeal.Found(route.Id, route.Origin, route.Destination, departure, 2450m, "try", "PC", "1234", 0, url, Now));
-            await SqlServerFixture.CreateUnitOfWork(dbContext).SaveChangesAsync();
-        }
-
-        await using (var readContext = fixture.CreateDbContext())
-        {
-            var deal = await readContext.FlightDeals.SingleAsync(item => item.FlightRouteId == route.Id);
-            Assert.Equal(departure, deal.DepartureAt);
-            Assert.Equal(2450m, deal.Price);
-            Assert.Equal("MAD", deal.Destination.Value);
-
-            var existing = await new FlightDealRepository(readContext).GetExistingKeysAsync([deal.DealKey], CancellationToken.None);
-            Assert.Contains(deal.DealKey, existing);
-        }
-
-        await using var duplicateContext = fixture.CreateDbContext();
-        duplicateContext.FlightDeals.Add(FlightDeal.Found(route.Id, route.Origin, route.Destination, departure, 2450m, "try", "PC", "1234", 0, url, Now.AddMinutes(1)));
-
-        await Assert.ThrowsAsync<Application.Abstractions.Persistence.UniqueConstraintViolationException>(
-            () => SqlServerFixture.CreateUnitOfWork(duplicateContext).SaveChangesAsync());
     }
 }

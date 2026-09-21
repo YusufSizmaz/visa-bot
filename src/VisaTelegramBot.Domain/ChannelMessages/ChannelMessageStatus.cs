@@ -15,8 +15,5 @@ public enum ChannelMessageStatus
 public enum ChannelMessageKind
 {
     /// <summary>Yoneticinin panelden yazdigi mesaj.</summary>
-    Custom = 1,
-
-    /// <summary>Ucus firsatindan uretilen mesaj.</summary>
-    FlightDeal = 2
+    Custom = 1
 }
