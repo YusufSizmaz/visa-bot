@@ -7,13 +7,18 @@
 
 .NET 9 üzerinde Clean Architecture, DDD ve CQRS için üretim seviyesinde bir referans olarak yazıldı.
 
+[![Telegram](https://img.shields.io/badge/Telegram-VisaBotCodynlab-26A5E4?logo=telegram&logoColor=white)](https://t.me/VisaBotCodynlab)
 [![Lisans: MIT](https://img.shields.io/badge/Lisans-MIT-green.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![CI](https://github.com/YusufSizmaz/visa-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/YusufSizmaz/visa-bot/actions/workflows/ci.yml)
 
-[**Canlı panel**](https://visa.codynlab.dev) · [**English README**](README.md) · [**Dağıtım rehberi**](DEPLOY.md)
+### 📣 [**Kanala katıl → t.me/VisaBotCodynlab**](https://t.me/VisaBotCodynlab)
+
+Vize randevu haberleri ve uçak bileti fırsatları, yayınlandığı anda. Ücretsiz, kayıt yok.
+
+[English README](README.md) · [Dağıtım rehberi](DEPLOY.md) · [Katkı rehberi](CONTRIBUTING.md) · [Değişiklikler](CHANGELOG.md)
 
 </div>
 
@@ -31,11 +36,14 @@ sayfalarını da takip eder, böylece ucuz bilet duyuruları da aynı akışa d�
 
 Her şey kendi sunucunuzda çalışır. SaaS yok, hesap yok, barındırma dışında maliyet yok.
 
-> **Not** — [visa.codynlab.dev](https://visa.codynlab.dev) adresindeki yönetim paneli API
-> anahtarıyla korunur, yani adres doğrudan bir giriş ekranı gösterir. Aşağıdaki ekran
-> görüntüleri panelin içini gösteriyor.
+**Sadece haberleri istiyorsanız** [t.me/VisaBotCodynlab](https://t.me/VisaBotCodynlab) kanalına
+katılın — bir kopyayı biz çalıştırıyoruz ve oraya yayınlıyoruz. **Kendinizinkini çalıştırmak
+istiyorsanız** okumaya devam edin.
 
 ## Ekran görüntüleri
+
+Yönetim paneli projeyle birlikte gelir ve API anahtarıyla korunur; yalnızca kendi kurulumunuzdan
+erişilir. Görünümü şöyle:
 
 **Kaynaklar** — her kaynağın kendi tipi, tarama aralığı, anahtar kelime filtresi ve sağlık durumu var.
 

@@ -7,13 +7,18 @@ then publishes what matters to a Telegram channel.**
 
 Built as a production-grade reference for Clean Architecture, DDD and CQRS on .NET 9.
 
+[![Telegram](https://img.shields.io/badge/Telegram-VisaBotCodynlab-26A5E4?logo=telegram&logoColor=white)](https://t.me/VisaBotCodynlab)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![CI](https://github.com/YusufSizmaz/visa-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/YusufSizmaz/visa-bot/actions/workflows/ci.yml)
 
-[**Live panel**](https://visa.codynlab.dev) · [**Türkçe README**](README.tr.md) · [**Deployment guide**](DEPLOY.md)
+### 📣 [**Join the channel → t.me/VisaBotCodynlab**](https://t.me/VisaBotCodynlab)
+
+Visa appointment news and flight deals, as they are published. Free, no signup.
+
+[Türkçe README](README.tr.md) · [Deployment guide](DEPLOY.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
 </div>
 
@@ -31,10 +36,13 @@ pages, so cheap-ticket announcements land in the same feed.
 
 Everything runs on your own server. There is no SaaS, no account, no cost beyond hosting.
 
-> **Note** — the admin panel at [visa.codynlab.dev](https://visa.codynlab.dev) is API-key
-> protected, so the public URL shows a login screen. The screenshots below are what is behind it.
+**If you just want the news**, join [t.me/VisaBotCodynlab](https://t.me/VisaBotCodynlab) — we run
+an instance and publish to it. **If you want to run your own**, keep reading.
 
 ## Screenshots
+
+The admin panel ships with the project and is API-key protected, so it is only reachable on your
+own deployment. This is what it looks like:
 
 **Sources** — every source has its own type, interval, keyword filter and health state.
 
