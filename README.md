@@ -11,7 +11,7 @@ Built as a production-grade reference for Clean Architecture, DDD and CQRS on .N
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Tests](https://img.shields.io/badge/tests-157%20passing-success)](#testing)
+[![CI](https://github.com/YusufSizmaz/visa-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/YusufSizmaz/visa-bot/actions/workflows/ci.yml)
 
 [**Live panel**](https://visa.codynlab.dev) · [**Türkçe README**](README.tr.md) · [**Deployment guide**](DEPLOY.md)
 
@@ -240,13 +240,14 @@ web/admin                         React admin panel
 
 ## Contributing
 
-Issues and pull requests are welcome.
+Issues and pull requests are welcome — see **[CONTRIBUTING.md](CONTRIBUTING.md)** for the
+development setup, review expectations and how to add a news source (usually no code required).
 
-- Run `dotnet test` and `npm --prefix web/admin run typecheck` before opening a PR
-- Keep the layer rules intact — `ArchitectureTests` will tell you if you do not
-- Explain **why** in comments, not what
-- Adding a news source usually needs no code at all, only an entry in the panel or in
-  `src/VisaTelegramBot.WebApi/Seed/news-sources.json`
+In short: run `dotnet test` and `npm --prefix web/admin run typecheck` before opening a PR, keep
+the layer rules intact, and explain **why** in comments rather than what.
+
+Security issues go through [SECURITY.md](SECURITY.md), not public issues. Participation is
+covered by our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

@@ -1,0 +1,60 @@
+version: 2
+
+updates:
+  # NuGet sürümleri Directory.Packages.props'ta merkezi olarak yönetilir;
+  # Dependabot bu dosyayı anlar ve güncellemeleri oraya yazar.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Tüm Microsoft.Extensions.* ve EF Core paketleri birlikte sürümlenir;
+      # ayrı ayrı PR açmak hem gürültü yapar hem sürüm uyumsuzluğu riski taşır.
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      npgsql:
+        patterns:
+          - "Npgsql*"
+      testing:
+        patterns:
+          - "xunit*"
+          - "NSubstitute"
+          - "Testcontainers*"
+          - "coverlet*"
+          - "NetArchTest*"
+
+  - package-ecosystem: npm
+    directory: /web/admin
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-router"
+          - "@types/react*"
+      tooling:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+          - "typescript"
+          - "tailwindcss"
+          - "@tailwindcss/*"
+
+  - package-ecosystem: docker
+    directories:
+      - /src/VisaTelegramBot.WebApi
+      - /src/VisaTelegramBot.Worker
+      - /web/admin
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

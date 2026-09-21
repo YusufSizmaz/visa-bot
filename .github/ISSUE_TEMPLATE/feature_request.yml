@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation you are in, not the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to see?
+      description: If you already have an approach in mind, describe it here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Including "doing nothing" — it is often the right answer.
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Would you like to implement it?
+      options:
+        - label: I am willing to open a pull request for this

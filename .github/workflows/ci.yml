@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Aynı dalda arka arkaya push yapılırsa eski çalışma iptal edilir.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (.NET 9)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          # Sürüm global.json'dan okunur; burada tekrar etmek iki yeri birden güncellemeyi gerektirirdi.
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Entegrasyon testleri Testcontainers ile gerçek bir PostgreSQL açar.
+      # ubuntu-latest runner'ında Docker hazır geldiği için ek kuruluma gerek yok.
+      - name: Test
+        run: dotnet test --no-build --configuration Release
+
+  frontend:
+    name: Admin panel (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/admin/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+  images:
+    name: Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Üretim yığını gizli değerlerin tanımlı olmasını şart koşar (${VAR:?...}).
+      # Burada yalnızca imajlar derleniyor, hiçbir servis ayağa kalkmıyor; sahte değerler yeterli.
+      - name: Build production images
+        env:
+          POSTGRES_PASSWORD: ci-build-only
+          API_KEY: ci-build-only-api-key
+          TELEGRAM_BOT_TOKEN: ci-build-only
+          TELEGRAM_CHANNEL_ID: "@ci_build_only"
+        run: docker compose -f compose.production.yaml build

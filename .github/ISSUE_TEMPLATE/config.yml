@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/YusufSizmaz/visa-bot/security/advisories/new
+    about: Please report security problems privately, not as a public issue.
+  - name: Add a news source
+    url: https://github.com/YusufSizmaz/visa-bot/blob/main/CONTRIBUTING.md#adding-a-news-source
+    about: Adding a source usually needs no code — see the guide first.

@@ -11,7 +11,7 @@
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Testler](https://img.shields.io/badge/testler-157%20geçiyor-success)](#testler)
+[![CI](https://github.com/YusufSizmaz/visa-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/YusufSizmaz/visa-bot/actions/workflows/ci.yml)
 
 [**Canlı panel**](https://visa.codynlab.dev) · [**English README**](README.md) · [**Dağıtım rehberi**](DEPLOY.md)
 
@@ -241,13 +241,14 @@ web/admin                         React yönetim paneli
 
 ## Katkı
 
-Issue ve pull request'ler memnuniyetle karşılanır.
+Issue ve pull request'ler memnuniyetle karşılanır. Geliştirme kurulumu, inceleme beklentileri ve
+haber kaynağı ekleme (çoğunlukla hiç kod gerektirmez) için **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-- PR açmadan önce `dotnet test` ve `npm --prefix web/admin run typecheck` çalıştırın
-- Katman kurallarını bozmayın — bozarsanız `ArchitectureTests` size söyler
-- Yorumlarda ne yapıldığını değil, **neden** yapıldığını anlatın
-- Haber kaynağı eklemek çoğunlukla hiç kod gerektirmez; panelden ya da
-  `src/VisaTelegramBot.WebApi/Seed/news-sources.json` dosyasından bir kayıt yeterlidir
+Kısaca: PR açmadan önce `dotnet test` ve `npm --prefix web/admin run typecheck` çalıştırın,
+katman kurallarını bozmayın, yorumlarda ne yapıldığını değil **neden** yapıldığını anlatın.
+
+Güvenlik açıkları public issue olarak değil [SECURITY.md](SECURITY.md) üzerinden bildirilir.
+Katılım [Davranış Kuralları](CODE_OF_CONDUCT.md) kapsamındadır.
 
 ## Lisans
 
