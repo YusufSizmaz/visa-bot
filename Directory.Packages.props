@@ -7,10 +7,10 @@
 
   <ItemGroup Label="Application">
     <!-- 12.5.0, MediatR'in Apache-2.0 lisansli son surumudur. 13+ ticari lisans ister. -->
-    <PackageVersion Include="MediatR" Version="12.5.0" />
+    <PackageVersion Include="MediatR" Version="14.2.0" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.20" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.20" />
   </ItemGroup>
 
