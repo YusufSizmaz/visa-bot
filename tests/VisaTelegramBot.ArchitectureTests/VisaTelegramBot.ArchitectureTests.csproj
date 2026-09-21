@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\VisaTelegramBot.Domain\VisaTelegramBot.Domain.csproj" />
+    <ProjectReference Include="..\..\src\VisaTelegramBot.Application\VisaTelegramBot.Application.csproj" />
+    <ProjectReference Include="..\..\src\VisaTelegramBot.Infrastructure\VisaTelegramBot.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\VisaTelegramBot.WebApi\VisaTelegramBot.WebApi.csproj" />
+    <ProjectReference Include="..\..\src\VisaTelegramBot.Worker\VisaTelegramBot.Worker.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

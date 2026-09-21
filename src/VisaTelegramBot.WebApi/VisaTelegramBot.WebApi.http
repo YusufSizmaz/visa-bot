@@ -1,0 +1,75 @@
+# Visual Studio 2022: her istegin ustundeki "Send request" baglantisina tiklayarak calistirin.
+@host = http://localhost:5127
+@apiKey = dev-api-key-change-me-please
+
+### Saglik kontrolu (anahtar gerekmez)
+GET {{host}}/health
+
+### Kaynaklari listele
+GET {{host}}/api/news-sources
+X-Api-Key: {{apiKey}}
+
+### RSS/Atom kaynagi ekle: Birlesik Krallik vize ve goc idaresi (GOV.UK resmi Atom beslemesi)
+POST {{host}}/api/news-sources
+X-Api-Key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "UK Visas and Immigration",
+  "url": "https://www.gov.uk/government/organisations/uk-visas-and-immigration.atom",
+  "type": "Rss",
+  "fetchIntervalMinutes": 30
+}
+
+### RSS kaynagi ekle: ABD Disisleri seyahat uyarilari (resmi RSS)
+POST {{host}}/api/news-sources
+X-Api-Key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "US State Department Travel Advisories",
+  "url": "https://travel.state.gov/_res/rss/TAsTWs.xml",
+  "type": "Rss",
+  "fetchIntervalMinutes": 60
+}
+
+### HTML kaynagi ekle (seciciler hedef siteye gore duzenlenmeli)
+POST {{host}}/api/news-sources
+X-Api-Key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "Ornek HTML Duyuru Sayfasi",
+  "url": "https://example.com/duyurular",
+  "type": "Html",
+  "fetchIntervalMinutes": 30,
+  "parsingRules": {
+    "itemSelector": "article.news-item",
+    "titleSelector": "h2",
+    "linkSelector": "a",
+    "summarySelector": "p.summary",
+    "publishedAtSelector": "time"
+  }
+}
+
+### Kaynagi hemen cek (id'yi yukaridaki yanittan kopyalayin)
+@sourceId = 00000000-0000-0000-0000-000000000000
+POST {{host}}/api/news-sources/{{sourceId}}/fetch
+X-Api-Key: {{apiKey}}
+
+### Kaynagi pasife al
+POST {{host}}/api/news-sources/{{sourceId}}/deactivate
+X-Api-Key: {{apiKey}}
+
+### Kuyruktaki haberler
+GET {{host}}/api/news-items?status=Pending&pageSize=20
+X-Api-Key: {{apiKey}}
+
+### Basarisiz haberler
+GET {{host}}/api/news-items?status=Failed
+X-Api-Key: {{apiKey}}
+
+### Haberi tekrar kuyruga al
+@newsItemId = 00000000-0000-0000-0000-000000000000
+POST {{host}}/api/news-items/{{newsItemId}}/requeue
+X-Api-Key: {{apiKey}}

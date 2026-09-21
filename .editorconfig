@@ -1,0 +1,58 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_size = 4
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_prefix
+dotnet_naming_rule.private_fields_underscore.severity = suggestion
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_prefix.required_prefix = _
+dotnet_naming_style.underscore_prefix.capitalization = camel_case
+# Kutuphane kodu degil; ConfigureAwait(false) zorunlu tutulmuyor.
+dotnet_diagnostic.CA2007.severity = none
+# Mesajlar Turkce; kultur uyarilari gurultu yaratiyor.
+dotnet_diagnostic.CA1303.severity = none
+dotnet_diagnostic.CA1304.severity = none
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1311.severity = none
+# Test ve DI siniflarinda gereksiz uyari.
+dotnet_diagnostic.CA1812.severity = none
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1062.severity = none
+dotnet_diagnostic.CA1031.severity = none
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA2000.severity = none
+dotnet_diagnostic.CA1034.severity = none
+dotnet_diagnostic.CA1000.severity = none
+dotnet_diagnostic.CA1819.severity = none
+dotnet_diagnostic.CA1308.severity = none
+dotnet_diagnostic.CA1054.severity = none
+dotnet_diagnostic.CA1055.severity = none
+dotnet_diagnostic.CA1056.severity = none
+dotnet_diagnostic.CA2234.severity = none
+dotnet_diagnostic.CA1002.severity = none
+dotnet_diagnostic.CA1032.severity = none
+dotnet_diagnostic.CA1064.severity = none
+dotnet_diagnostic.CA1724.severity = none
+dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.CA2326.severity = none
+dotnet_diagnostic.CA2327.severity = none
+dotnet_diagnostic.CA1711.severity = none
+
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none

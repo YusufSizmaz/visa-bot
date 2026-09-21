@@ -1,0 +1,156 @@
+{
+  "$comment": "Uygulama acilisinda eklenecek resmi kaynaklar. Ayni adresle kayit varsa atlanir; mevcut kaynaklar degistirilmez. Tum adresler 2026-09 itibariyla dogrulandi.",
+  "keywordSets": {
+    "visaAppointments": [
+      "randevu",
+      "vize",
+      "visa",
+      "visado",
+      "visto",
+      "appointment",
+      "cita",
+      "appuntament",
+      "prenotazione",
+      "schengen",
+      "BLS",
+      "iDATA",
+      "VFS"
+    ],
+    "flightCampaigns": [
+      "uçuş",
+      "uçak",
+      "bilet",
+      "sefer",
+      "yurt dışı",
+      "yurt içi",
+      "başlayan",
+      "indirimli"
+    ],
+    "flightDealNews": [
+      "kampanya",
+      "indirim",
+      "fırsat",
+      "başlayan",
+      "TL den",
+      "USD den",
+      "Euro dan",
+      "dolardan",
+      "erken rezervasyon",
+      "early bird"
+    ]
+  },
+  "sources": [
+    {
+      "name": "İspanya Ankara Büyükelçiliği - Haberler",
+      "url": "https://www.exteriores.gob.es/Embajadas/ankara/es/Comunicacion/Noticias/Paginas/index.aspx",
+      "type": "Html",
+      "fetchIntervalMinutes": 5,
+      "keywordSet": "visaAppointments",
+      "turkishOnly": true,
+      "parsingRules": {
+        "itemSelector": ".cardType1-Wrapper",
+        "titleSelector": ".cardType1__header a",
+        "linkSelector": ".cardType1__header a",
+        "summarySelector": ".cardType1__text",
+        "publishedAtSelector": ".cardType1__time"
+      }
+    },
+    {
+      "name": "İspanya İstanbul Başkonsolosluğu - Haberler",
+      "url": "https://www.exteriores.gob.es/Consulados/estambul/es/Comunicacion/Noticias/Paginas/index.aspx",
+      "type": "Html",
+      "fetchIntervalMinutes": 5,
+      "keywordSet": "visaAppointments",
+      "turkishOnly": true,
+      "parsingRules": {
+        "itemSelector": ".cardType1-Wrapper",
+        "titleSelector": ".cardType1__header a",
+        "linkSelector": ".cardType1__header a",
+        "summarySelector": ".cardType1__text",
+        "publishedAtSelector": ".cardType1__time"
+      }
+    },
+    {
+      "name": "İtalya İstanbul Başkonsolosluğu",
+      "url": "https://consistanbul.esteri.it/tr/feed/",
+      "type": "Rss",
+      "fetchIntervalMinutes": 10,
+      "keywordSet": "visaAppointments",
+      "turkishOnly": true
+    },
+    {
+      "name": "İtalya Ankara Büyükelçiliği",
+      "url": "https://ambankara.esteri.it/tr/feed/",
+      "type": "Rss",
+      "fetchIntervalMinutes": 10,
+      "keywordSet": "visaAppointments",
+      "turkishOnly": true
+    },
+    {
+      "name": "ABD Türkiye Büyükelçiliği - Vize Duyuruları",
+      "url": "https://tr.usembassy.gov/category/visas/feed/",
+      "type": "Rss",
+      "fetchIntervalMinutes": 10,
+      "keywordSet": "visaAppointments",
+      "turkishOnly": true
+    },
+    {
+      "name": "Enuygun - Uçak Bileti Kampanyaları (THY, AJet, Pegasus ve diğerleri)",
+      "url": "https://www.enuygun.com/kampanyalar/ucak-bileti/",
+      "type": "Html",
+      "category": "FlightCampaign",
+      "fetchIntervalMinutes": 60,
+      "keywordSet": "flightCampaigns",
+      "turkishOnly": true,
+      "parsingRules": {
+        "itemSelector": "[data-testid=\"slide-content\"]",
+        "titleSelector": "[data-testid=\"slide-title\"]",
+        "linkSelector": "a[data-testid=\"slide-see-more\"]",
+        "summarySelector": null,
+        "publishedAtSelector": null
+      }
+    },
+    {
+      "$comment": "Sitenin ana /feed/ beslemesi rehber yazilarini verir; bilet ilanlari ayri 'ucak-bileti' icerik tipindedir. Ozet fiyati ve uygun aylari icerir.",
+      "name": "Ucuza Uçak - Ucuz Uçak Bileti İlanları",
+      "url": "https://ucuzaucak.net/feed/?post_type=ucak-bileti",
+      "type": "Rss",
+      "category": "FlightCampaign",
+      "fetchIntervalMinutes": 5,
+      "turkishOnly": true
+    },
+    {
+      "$comment": "THY ve AJet sitelerine dogrudan erisilemedigi icin kampanyalari buradan gelir. Sayfa yeni hat ve bagaj haberleri de icerir; anahtar kelimeler sadece fiyat/kampanya haberlerini gecirir. Kaynak HTML'de ozet '<p><p>' ile bozuk oldugu icin bos <p> atlanir.",
+      "name": "Sonfiyat - Havayolu Kampanya Haberleri (THY, AJet, Pegasus)",
+      "url": "https://www.sonfiyat.com/haberler/kampanyalar",
+      "type": "Html",
+      "category": "FlightCampaign",
+      "fetchIntervalMinutes": 60,
+      "keywordSet": "flightDealNews",
+      "turkishOnly": true,
+      "parsingRules": {
+        "itemSelector": "div.box > a[href^=\"/haber/\"]",
+        "titleSelector": "h4",
+        "linkSelector": null,
+        "summarySelector": "div.fow > p:not(:empty):not(:last-child)",
+        "publishedAtSelector": "div.fow > p:last-child"
+      }
+    },
+    {
+      "name": "Pegasus - Kampanyalı Uçak Biletleri",
+      "url": "https://www.flypgs.com/kampanyali-ucak-biletleri",
+      "type": "Html",
+      "category": "FlightCampaign",
+      "fetchIntervalMinutes": 60,
+      "keywordSet": "flightCampaigns",
+      "turkishOnly": true,
+      "parsingRules": {
+        "itemSelector": ".active-campaigns__item, .swiper-slide:not(.past-campaigns__slide) .campaign-swiper-card",
+        "titleSelector": ".campaign-card__title, .campaign-swiper-card__title, .campaign-swiper-card__desc",
+        "linkSelector": "a[href*=\"/kampanyali-ucak-biletleri/\"]",
+        "summarySelector": ".campaign-card__desc, .campaign-swiper-card__desc",
+        "publishedAtSelector": null
+      }
+    }
+  ]
+}

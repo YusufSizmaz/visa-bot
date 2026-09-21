@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Domain katmani hicbir NuGet paketine ve projeye bagimli degildir.
+    Ortak ayarlar (TargetFramework, Nullable...) Directory.Build.props dosyasindan gelir.
+  -->
+
+</Project>
