@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           # Sürüm global.json'dan okunur; burada tekrar etmek iki yeri birden güncellemeyi gerektirirdi.
           global-json-file: global.json
