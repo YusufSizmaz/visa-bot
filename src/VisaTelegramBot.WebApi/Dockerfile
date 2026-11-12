@@ -1,5 +1,5 @@
 # Multi-stage build: SDK imaji sadece derleme icin kullanilir, son imaj yalnizca calisma zamanini icerir.
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /repo
 
 # Once sadece proje dosyalari kopyalanir ve restore edilir.
