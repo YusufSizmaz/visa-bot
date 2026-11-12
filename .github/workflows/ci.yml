@@ -17,7 +17,7 @@ jobs:
     name: Backend (.NET 9)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -42,7 +42,7 @@ jobs:
       run:
         working-directory: web/admin
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -63,7 +63,7 @@ jobs:
     name: Docker images
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Üretim yığını gizli değerlerin tanımlı olmasını şart koşar (${VAR:?...}).
       # Burada yalnızca imajlar derleniyor, hiçbir servis ayağa kalkmıyor; sahte değerler yeterli.
